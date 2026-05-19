@@ -5,7 +5,9 @@ let handLandmarks = [];
 let playerGesture = "未知";
 let pcGesture = "等待中";
 let resultText = "請出拳！";
-let lastUpdateTime = 0;
+// 新增遊戲狀態控制
+let gameState = "WAITING"; // "WAITING" (等待出拳) 或 "SHOW_RESULT" (顯示結果)
+let timerStart = 0;
 
 function setup() {
   createCanvas(400, 400);
@@ -54,7 +56,7 @@ function draw() {
   image(video, 0, 0, width, height);
   pop();
   
-  playerGesture = "未知"; // 每幀重置，若有偵測到手勢再更新
+  let currentGesture = "未知"; // 當下這幀偵測到的手勢
 
   // Draw detected hand landmarks
   if (handLandmarks && handLandmarks.length > 0) {
@@ -69,14 +71,28 @@ function draw() {
       circle(x, y, 10);
     }
     
-    playerGesture = detectGesture(landmarks);
+    currentGesture = detectGesture(landmarks);
   }
 
-  // 遊戲邏輯：如果玩家有出拳，且距離上次電腦出拳已過 1.5 秒 (1500毫秒)
-  if (playerGesture !== "未知" && millis() - lastUpdateTime > 1500) {
-    pcGesture = random(["石頭", "剪刀", "布"]);
-    resultText = checkWin(playerGesture, pcGesture);
-    lastUpdateTime = millis();
+  // 遊戲邏輯與狀態切換
+  if (gameState === "WAITING") {
+    playerGesture = currentGesture; // 持續更新玩家手勢
+    
+    if (playerGesture !== "未知") {
+      // 一旦偵測到有效出拳，電腦隨機出拳並結算
+      pcGesture = random(["石頭", "剪刀", "布"]);
+      resultText = checkWin(playerGesture, pcGesture);
+      gameState = "SHOW_RESULT";
+      timerStart = millis(); // 開始計時
+    } else {
+      pcGesture = "等待中...";
+      resultText = "請對著鏡頭出拳！";
+    }
+  } else if (gameState === "SHOW_RESULT") {
+    // 顯示結果 2 秒 (2000毫秒) 後，重置回等待狀態
+    if (millis() - timerStart > 2000) {
+      gameState = "WAITING";
+    }
   }
 
   // 繪製遊戲 UI 文字
