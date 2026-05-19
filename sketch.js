@@ -8,7 +8,6 @@ let resultText = "請出拳！";
 // 新增遊戲狀態控制
 let gameState = "WAITING"; // "WAITING" (等待出拳), "SHOW_RESULT" (顯示結果), 或 "STOPPED" (暫停)
 let timerStart = 0;
-let lastToggleTime = 0; // 紀錄上次切換狀態的時間，防止連觸
 
 function setup() {
   createCanvas(400, 400);
@@ -97,15 +96,13 @@ function draw() {
     currentGesture = detectGesture(landmarks);
   }
 
-  // 新增：利用「讚」手勢來切換遊戲暫停或重新開始 (加上 1 秒的冷卻時間防連觸)
-  if (currentGesture === "讚" && millis() - lastToggleTime > 1000) {
-    if (gameState === "STOPPED") {
-      gameState = "WAITING"; // 恢復遊戲
-    } else {
-      gameState = "STOPPED"; // 暫停遊戲
-      resultText = "遊戲已暫停 (比 👍 重新開始)";
-    }
-    lastToggleTime = millis();
+  // 新增：利用「倒讚」暫停，利用「讚」繼續遊戲
+  if (currentGesture === "倒讚" && gameState !== "STOPPED") {
+    gameState = "STOPPED"; // 暫停遊戲
+    resultText = "遊戲已暫停 (比 👍 繼續)";
+  } else if (currentGesture === "讚" && gameState === "STOPPED") {
+    gameState = "WAITING"; // 恢復遊戲
+    resultText = "請對著鏡頭出拳！(比 👎 暫停)";
   }
 
   // 遊戲邏輯與狀態切換
@@ -121,7 +118,7 @@ function draw() {
       timerStart = millis(); // 開始計時
     } else {
       pcGesture = "等待中...";
-      resultText = "請對著鏡頭出拳！(比 👍 暫停)";
+      resultText = "請對著鏡頭出拳！(比 👎 暫停)";
     }
   } else if (gameState === "SHOW_RESULT") {
     // 顯示結果 2 秒 (2000毫秒) 後，重置回等待狀態
@@ -155,6 +152,10 @@ function detectGesture(landmarks) {
   // 判斷大拇指：拇指指尖(4)到小指根部(17)的距離，若大於 拇指關節(3)到小指根部的距離，代表大拇指是張開的
   let isThumbOpen = dist(landmarks[4].x, landmarks[4].y, pinkyBase.x, pinkyBase.y) > dist(landmarks[3].x, landmarks[3].y, pinkyBase.x, pinkyBase.y);
 
+  // 判斷大拇指的上下方向 (Y軸越往上數值越小，因此指尖 Y < 關節 Y 代表朝上)
+  let isThumbUp = isThumbOpen && landmarks[4].y < landmarks[3].y;
+  let isThumbDown = isThumbOpen && landmarks[4].y > landmarks[3].y;
+
   // 計算指尖(tip)到手腕的距離 是否大於 第二關節(pip)到手腕的距離 -> 用來判斷手指有沒有伸直
   let isIndexOpen = dist(landmarks[8].x, landmarks[8].y, wrist.x, wrist.y) > dist(landmarks[6].x, landmarks[6].y, wrist.x, wrist.y);
   let isMiddleOpen = dist(landmarks[12].x, landmarks[12].y, wrist.x, wrist.y) > dist(landmarks[10].x, landmarks[10].y, wrist.x, wrist.y);
@@ -163,9 +164,12 @@ function detectGesture(landmarks) {
 
   let openCount = isIndexOpen + isMiddleOpen + isRingOpen + isPinkyOpen;
 
-  // 加入「讚」的判定：其他四指彎曲且大拇指伸直
-  if (openCount === 0 && isThumbOpen) return "讚";
-  if (openCount === 0 && !isThumbOpen) return "石頭";
+  // 加入「讚」與「倒讚」的判定：其他四指彎曲且大拇指伸直
+  if (openCount === 0) {
+    if (isThumbUp) return "讚";
+    if (isThumbDown) return "倒讚";
+    return "石頭";
+  }
   if (openCount >= 3) return "布";
   if (openCount === 2 && isIndexOpen && isMiddleOpen) return "剪刀";
 
