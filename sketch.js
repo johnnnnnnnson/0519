@@ -4,8 +4,10 @@ let handLandmarks = [];
 function setup() {
   createCanvas(400, 400);
 
-  // Initialize webcam capture
-  video = createCapture(VIDEO);
+  // Initialize webcam capture 
+  // 改為建立一般 video 元素，避免與 MediaPipe Camera 搶奪視訊鏡頭
+  video = createElement('video');
+  video.attribute('playsinline', ''); // 確保在部分瀏覽器能正常播放
   video.size(400, 400);
   video.hide(); // Hide the default HTML video element
 
