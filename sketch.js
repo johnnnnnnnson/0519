@@ -63,6 +63,28 @@ function draw() {
   if (handLandmarks && handLandmarks.length > 0) {
     let landmarks = handLandmarks[0]; // 只取第一隻手來玩遊戲
     
+    // 繪製手部骨架連線
+    const connections = [
+      [0, 1], [1, 2], [2, 3], [3, 4],       // 拇指
+      [0, 5], [5, 6], [6, 7], [7, 8],       // 食指
+      [5, 9], [9, 10], [10, 11], [11, 12],  // 中指
+      [9, 13], [13, 14], [14, 15], [15, 16],// 無名指
+      [13, 17], [17, 18], [18, 19], [19, 20],// 小指
+      [0, 17]                               // 手掌根部
+    ];
+    
+    stroke(0, 255, 255); // 設定骨架線條顏色 (青色)
+    strokeWeight(3);
+    for (let i = 0; i < connections.length; i++) {
+      let [p1, p2] = connections[i];
+      let x1 = (1 - landmarks[p1].x) * width;
+      let y1 = landmarks[p1].y * height;
+      let x2 = (1 - landmarks[p2].x) * width;
+      let y2 = landmarks[p2].y * height;
+      line(x1, y1, x2, y2);
+    }
+
+    // 繪製手部關節點
     for (let j = 0; j < landmarks.length; j++) {
       // 因為畫面翻轉了，X 座標也要跟著翻轉 (1 - x)
       let x = (1 - landmarks[j].x) * width;
