@@ -113,16 +113,16 @@ function draw() {
 
   // 繪製遊戲 UI 文字
   textAlign(CENTER, CENTER);
-  textSize(32);
-  strokeWeight(4);
+  textSize(20);
+  strokeWeight(3); // 邊框變細一點點
   stroke(0);
   fill(255);
 
-  text(`你: ${playerGesture}`, width / 4, height - 40);
-  text(`電腦: ${pcGesture}`, width * 3 / 4, height - 40);
+  text(`你: ${playerGesture}`, width / 4, height - 25);
+  text(`電腦: ${pcGesture}`, width * 3 / 4, height - 25);
 
-  textSize(48);
-  text(resultText, width / 2, 50);
+  textSize(32);
+  text(resultText, width / 2, 40);
 }
 
 // 判斷手勢的副程式
